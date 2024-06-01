@@ -1,3 +1,6 @@
+// Import crate::Error::Result; to avoid conflicts with std::Result.
+pub use self::error::{Error, Result};
+
 use axum::{
     extract::{Path, Query},
     response::{Html, IntoResponse},
@@ -8,10 +11,16 @@ use serde::Deserialize;
 use std::net::SocketAddr;
 use tower_http::services::ServeDir;
 
+// region:         ---Modules
+mod error;
+mod web;
+// endregion:      ---Modules
+
 #[tokio::main]
 async fn main() {
     let routes_all = Router::new()
         .merge(routes_hello())
+        .merge(web::routes_login::routes())
         .fallback_service(routes_static());
 
     // region:         ---Start Server
