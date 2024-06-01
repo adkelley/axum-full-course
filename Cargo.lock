@@ -109,6 +109,8 @@ dependencies = [
  "axum",
  "axum-server",
  "httpc-test",
+ "serde",
+ "serde_json",
  "tokio",
 ]
 
