@@ -8,12 +8,16 @@ unsafe-code = "forbid"
 unused = "allow"       # for exploratory dev.
 
 [dependencies]
-axum = { version = "0.7.5", features = ["macros"] }
+tokio = { version = "1.38.0", features = ["full"] }
+# Serde / json
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.117"
-tokio = { version = "1.38.0", features = ["full"] }
+# Axum
+axum = { version = "0.7.5", features = ["macros"] }
 tower-cookies = "0.10.0"
 tower-http = { version = "0.5.2", features = ["fs"] }
+# Others
+lazy-regex = "3.1.0"
 
 [dev-dependencies]
 anyhow = "1.0.86"
