@@ -1,27 +1,51 @@
+use async_trait::async_trait;
+use axum::extract::FromRequestParts;
+use axum::http::request::Parts;
+use axum::RequestPartsExt;
 use axum::{body::Body, extract::Request, middleware::Next, response::Response};
 use lazy_regex::regex_captures;
 use tower_cookies::{Cookie, Cookies};
 
+use crate::ctx::Ctx;
 use crate::web::AUTH_TOKEN;
 use crate::{Error, Result};
 
 // Check Cookie existence and validity.
-pub async fn mw_require_auth(cookies: Cookies, req: Request<Body>, next: Next) -> Result<Response> {
+pub async fn mw_require_auth(ctx: Result<Ctx>, req: Request<Body>, next: Next) -> Result<Response> {
     println!("->> {:<12} - mw_require_auth", "MIDDLEWARE");
 
-    let auth_token = cookies
-        .get(AUTH_TOKEN)
-        .map(|c: Cookie| c.value().to_string());
-
-    // Parse Token
-    let (id, exp, sign) = auth_token
-        .ok_or(Error::AuthFailNoAuthTokenCookie)
-        .and_then(parse_token)?;
-
-    // TODO: Token validation logic.
+    ctx?;
 
     Ok(next.run(req).await)
 }
+
+// region:         --- Ctx Extractor
+
+#[async_trait]
+impl<S: Send + Sync> FromRequestParts<S> for Ctx {
+    type Rejection = Error;
+
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
+        println!("->> {:<12} - Ctx", "EXTRACTOR");
+
+        // Use the cookies extractor to get the cookies.
+        let cookies = parts.extract::<Cookies>().await.unwrap();
+
+        let auth_token = cookies
+            .get(AUTH_TOKEN)
+            .map(|c: Cookie| c.value().to_string());
+
+        // Parse Token
+        let (user_id, exp, sign) = auth_token
+            .ok_or(Error::AuthFailNoAuthTokenCookie)
+            .and_then(parse_token)?;
+
+        // TODO: Token validation logic.
+
+        Ok(Ctx::new(user_id))
+    }
+}
+// endregion:      --- Ctx Extractor
 
 /// Parse a token of format `user-[user-id].[expiration].[signature]`.
 /// Returns the (user-id, expiration, signature).
