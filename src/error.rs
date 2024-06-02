@@ -7,7 +7,11 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, Clone)]
 pub enum Error {
+    // Auth Errors
     LoginFail,
+
+    // Model Errors
+    TicketDeleteFailIdNotFound { id: u64 },
 }
 
 // Never pass server errors to the client

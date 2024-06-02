@@ -8,33 +8,41 @@ use axum::{
     routing::{get, get_service},
     Router,
 };
+use model::ModelController;
 use serde::Deserialize;
 use std::net::SocketAddr;
+use tokio::net::TcpListener;
 use tower_cookies::CookieManagerLayer;
 use tower_http::services::ServeDir;
 
 // region:         ---Modules
 mod error;
+mod model;
 mod web;
 // endregion:      ---Modules
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
+    // Initialize the ModelController.
+    let mc = ModelController::new().await?;
+
     let routes_all = Router::new()
         .merge(routes_hello())
         .merge(web::routes_login::routes())
+        .nest("/api", web::routes_tickets::routes(mc.clone()))
         .layer(middleware::map_response(main_response_mapper))
         .layer(CookieManagerLayer::new())
         .fallback_service(routes_static());
 
     // region:         ---Start Server
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
-    println!("->> Listening on {}", addr);
-    axum_server::bind(addr)
-        .serve(routes_all.into_make_service())
+    let listener = TcpListener::bind("127.0.0.1:8080").await.unwrap();
+    println!("->> LISTENING on {:?}\n", listener.local_addr());
+    axum::serve(listener, routes_all.into_make_service())
         .await
         .unwrap();
     // endregion:      ---Start Server
+
+    Ok(())
 }
 
 // region:         ---Response Mapper
