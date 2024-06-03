@@ -21,6 +21,7 @@ lazy-regex = "3.1.0"
 async-trait = "0.1.80" # makes async fn in traits work
 strum_macros = "0.26.3"
 uuid = { version = "1.8.0", features = ["v4", "fast-rng"] }
+serde_with = "3.8.1"
 
 [dev-dependencies]
 anyhow = "1.0.86"

@@ -14,7 +14,7 @@ async fn quick_dev() -> Result<()> {
         "password": "welcome"
         }),
     );
-    req_login.await?.print().await?;
+    // req_login.await?.print().await?;
 
     let req_create_ticket = hc.do_post(
         "/api/tickets",
